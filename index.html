@@ -1,0 +1,364 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Codelab: Crea un mini Pokedex con React</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14" ga4id=""></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  codelab-ga4id=""
+                  id="react-pokedex"
+                  title="Codelab: Crea un mini Pokedex con React"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Objetivo" duration="0">
+        <p>En este codelab, crearemos una aplicación simple de Pokédex utilizando React. Una Pokédex es una enciclopedia digital de Pokémon que permite a los usuarios buscar información sobre diferentes Pokémon. Nuestra aplicación se conectará a la API de Pokémon <code>(https://pokeapi.co)</code> para obtener datos en tiempo real. Este proyecto nos ayudará a practicar y aplicar varios conceptos avanzados de React, incluyendo el manejo del estado, el uso de hooks avanzados como <code>useEffect</code>, <code>useReducer</code>, y <code>useContext</code>, la creación de componentes reutilizables, y la gestión de formularios y peticiones HTTP. <img alt="pokedex" src="img\\763ff594d09fac2b.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 1: Configuración del Proyecto" duration="5">
+        <h2 is-upgraded>Crea un nuevo proyecto React usando Create React App:</h2>
+<p>create-react-app es una herramienta de línea de comandos que nos permite crear rápidamente un proyecto de React configurado y listo para comenzar a desarrollar.</p>
+<pre><code language="language-bash" class="language-bash">npx create-react-app mini-pokedex
+cd mini-pokedex
+</code></pre>
+<h2 is-upgraded>Instala Axios para realizar peticiones HTTP a la API de Pokémon</h2>
+<p><code>axios</code> es una biblioteca para hacer solicitudes HTTP, la utilizaremos para consumir la PokeAPI.</p>
+<pre><code language="language-bash" class="language-bash">npm install axios
+</code></pre>
+<h2 is-upgraded>Instala React Router DOM</h2>
+<p><code>react-router-dom</code> es una biblioteca que nos permitirá implementar el enrutamiento en nuestra aplicación de React.</p>
+<pre><code language="language-bash" class="language-bash">npm install react-router-dom
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 2: Configurar el enrutamiento" duration="10">
+        <p>Para este paso ingresamos al archivo <code>src/App.js</code> y realizamos lo siguiente</p>
+<ul>
+<li>Importamos los componentes necesarios de react-router-dom: BrowserRouter (renombrado como Router), Routes y Route.</li>
+<li>Importamos los componentes PokemonList y PokemonDetails que crearemos más adelante.</li>
+<li>Importamos el componente PokemonProvider que creará el contexto para compartir los datos de los Pokémon.</li>
+<li>Dentro del componente App, envolvemos todo con PokemonProvider para que los componentes hijos puedan acceder al contexto.</li>
+<li>Utilizamos BrowserRouter para configurar el enrutamiento en nuestra aplicación.</li>
+<li>Dentro de Routes, definimos las rutas principales: la ruta / renderizará el componente PokemonList, y la ruta /pokemon/:id renderizará el componente PokemonDetails con el ID del Pokémon como parámetro de ruta.</li>
+</ul>
+<pre><code language="language-jsx" class="language-jsx">import React from &#34;react&#34;;
+import { BrowserRouter as Router, Routes, Route } from &#34;react-router-dom&#34;;
+import PokemonList from &#34;./components/PokemonList&#34;;
+import PokemonDetails from &#34;./components/PokemonDetails&#34;;
+import PokemonProvider from &#34;./context/PokemonContext&#34;;
+
+function App() {
+  return (
+    &lt;PokemonProvider&gt;
+      &lt;Router&gt;
+        &lt;div className=&#34;App&#34;&gt;
+          &lt;Routes&gt;
+            &lt;Route exact path=&#34;/&#34; element={&lt;PokemonList /&gt;} /&gt;
+            &lt;Route path=&#34;/pokemon/:id&#34; element={&lt;PokemonDetails /&gt;} /&gt;
+          &lt;/Routes&gt;
+        &lt;/div&gt;
+      &lt;/Router&gt;
+    &lt;/PokemonProvider&gt;
+  );
+}
+
+export default App;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 3: Crear el contexto" duration="0">
+        <p>Para este paso debemos crear una nueva carpeta llamada <code>context</code> dentro de la carpeta <code>src</code> y dentro de context creamos un nuevo archivo llamado <code>PokemonContext.js</code>. Ingresamos a esta ruta en nuestro proyecto <code>src/context/PokemonContext.js</code> y realizamos los siguientes pasos.</p>
+<ul>
+<li>Importamos los hooks createContext, useState y useEffect de React, y axios para hacer solicitudes HTTP.</li>
+<li>Creamos un nuevo contexto con createContext() y lo exportamos como PokemonContext.</li>
+<li>Definimos el componente PokemonProvider que será el proveedor del contexto.</li>
+<li>Dentro de PokemonProvider, utilizamos useState para definir el estado inicial de pokemons (arreglo vacío) y loading (true).</li>
+<li>Utilizamos useEffect para realizar la solicitud inicial a la PokeAPI y obtener la lista de Pokémon. Cuando la respuesta se recibe, actualizamos el estado pokemons con los resultados y establecemos loading en false.</li>
+<li>Envolvemos a los componentes hijos con PokemonContext.Provider y les proporcionamos los valores de pokemons y loading a través del valor prop.</li>
+<li>Exportamos PokemonProvider para utilizarlo en el componente App.</li>
+</ul>
+<pre><code language="language-jsx" class="language-jsx">import React, { createContext, useState, useEffect } from &#34;react&#34;;
+import axios from &#34;axios&#34;;
+
+export const PokemonContext = createContext();
+
+const PokemonProvider = ({ children }) =&gt; {
+  const [pokemons, setPokemons] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    const fetchPokemons = async () =&gt; {
+      try {
+        const response = await axios.get(
+          &#34;https://pokeapi.co/api/v2/pokemon?limit=151&#34;
+        );
+        setPokemons(response.data.results);
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchPokemons();
+  }, []);
+
+  return (
+    &lt;PokemonContext.Provider value=&#123;&#123; pokemons, loading }}&gt;
+      {children}
+    &lt;/PokemonContext.Provider&gt;
+  );
+};
+
+export default PokemonProvider;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 4: Obtener la lista de Pokémon" duration="0">
+        <p>Para este paso creamos una nueva carpeta llamada <code>components</code> dentro de la carpeta <code>src</code> y dentro de la carpeta components creamos un archivo llamado <code>PokemonList.js</code>. Una vez creado vamos a este archivo en nuestro proyecto <code>src/components/PokemonList.js</code></p>
+<ul>
+<li>Importamos el hook useContext de React para acceder al contexto y Link de react-router-dom para crear enlaces de navegación.</li>
+<li>Importamos el PokemonContext desde el archivo PokemonContext.js.</li>
+<li>Definimos el componente PokemonList como una función.</li>
+<li>Dentro del componente, utilizamos useContext para obtener los valores de pokemons y loading del contexto.</li>
+<li>Si loading es true, mostramos un mensaje de &#34;Cargando...&#34;.</li>
+<li>Si loading es false, mapeamos el arreglo pokemons y creamos una lista (ul) con un Link para cada Pokémon que redirige a la ruta /pokemon/:id con el ID del Pokémon correspondiente.</li>
+</ul>
+<pre><code language="language-jsx" class="language-jsx">import React, { useContext } from &#34;react&#34;;
+import { Link } from &#34;react-router-dom&#34;;
+import { PokemonContext } from &#34;../context/PokemonContext&#34;;
+
+const PokemonList = () =&gt; {
+  const { pokemons, loading } = useContext(PokemonContext);
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Pokédex&lt;/h1&gt;
+      {loading ? (
+        &lt;div&gt;Cargando...&lt;/div&gt;
+      ) : (
+        &lt;ul className=&#34;pokemon-list&#34;&gt;
+          {pokemons.map((pokemon, index) =&gt; (
+            &lt;li key={index}&gt;
+              &lt;Link to={`/pokemon/${index + 1}`}&gt;{pokemon.name}&lt;/Link&gt;
+            &lt;/li&gt;
+          ))}
+        &lt;/ul&gt;
+      )}
+    &lt;/div&gt;
+  );
+};
+
+export default PokemonList;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 5: Mostrar detalles del Pokémon" duration="0">
+        <p>Para este paso creamos un nuevo archivo llamado <code>PokemonDetails.js</code> dentro de la carpeta components y lo abrimos <code>src/components/PokemonDetails.js</code></p>
+<ul>
+<li>Importamos los hooks useContext, useEffect y useState de React, y useParams de react-router-dom para obtener los parámetros de la ruta actual.</li>
+<li>Importamos axios para hacer solicitudes HTTP.</li>
+<li>Definimos el componente PokemonDetails como una función.</li>
+<li>Dentro del componente, obtenemos el id del Pokémon de los parámetros de la ruta utilizando el hook useParams.</li>
+<li>Utilizamos useState para definir el estado inicial de pokemonDetails como null.</li>
+<li>Utilizamos useEffect para realizar una solicitud a la PokeAPI cuando el componente se monta o cuando el id cambia.</li>
+<li>Cuando la respuesta se recibe, actualizamos el estado pokemonDetails con los datos del Pokémon.</li>
+<li>Si pokemonDetails no es nulo, mostramos los detalles del Pokémon, incluyendo su nombre, imagen, altura, peso y una lista de sus habilidades.</li>
+<li>Si pokemonDetails es nulo, mostramos un mensaje de &#34;Cargando...&#34;.</li>
+<li>Exportamos el componente PokemonDetails para poder utilizarlo en otros lugares.</li>
+</ul>
+<pre><code language="language-jsx" class="language-jsx">import React, { useContext, useEffect, useState } from &#34;react&#34;;
+import { useParams } from &#34;react-router-dom&#34;;
+import axios from &#34;axios&#34;;
+
+const PokemonDetails = () =&gt; {
+  const { id } = useParams();
+  const [pokemonDetails, setPokemonDetails] = useState(null);
+
+  useEffect(() =&gt; {
+    const fetchPokemonDetails = async () =&gt; {
+      try {
+        const response = await axios.get(
+          `https://pokeapi.co/api/v2/pokemon/${id}`
+        );
+        setPokemonDetails(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchPokemonDetails();
+  }, [id]);
+
+  return (
+    &lt;div&gt;
+      {pokemonDetails ? (
+        &lt;div className=&#34;pokemon-details&#34;&gt;
+          &lt;h2&gt;{pokemonDetails.name}&lt;/h2&gt;
+          &lt;img
+            src={pokemonDetails.sprites.front_default}
+            alt={pokemonDetails.name}
+          /&gt;
+          &lt;p&gt;Altura: {pokemonDetails.height / 10} m&lt;/p&gt;
+          &lt;p&gt;Peso: {pokemonDetails.weight / 10} kg&lt;/p&gt;
+          &lt;h3&gt;Habilidades:&lt;/h3&gt;
+          &lt;ul&gt;
+            {pokemonDetails.abilities.map((ability, index) =&gt; (
+              &lt;li key={index}&gt;{ability.ability.name}&lt;/li&gt;
+            ))}
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      ) : (
+        &lt;div&gt;Cargando...&lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+};
+
+export default PokemonDetails;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 5: Agregar estilos" duration="0">
+        <p>Aquí debemos crear un nuevo archivo llamado <code>styles.css</code> en la carpeta src, abrimos el archivo <code>src/styles.css</code></p>
+<ul>
+<li>Estos estilos CSS mejorarán la apariencia de nuestra aplicación Pokédex.</li>
+<li>Los estilos generales establecen la fuente, los márgenes, el relleno y el color de fondo del cuerpo y del contenedor principal de la aplicación.</li>
+<li>Los estilos para PokemonList establecen una cuadrícula responsive para mostrar los Pokémon como tarjetas con bordes redondeados, sombras y estilos para los enlaces.</li>
+<li>Los estilos para PokemonDetails establecen un contenedor con bordes redondeados, sombras y estilos para el encabezado, la imagen y la lista de habilidades.</li>
+</ul>
+<pre><code language="language-css" class="language-css">/* Estilos generales */
+body {
+  font-family: &#34;Roboto&#34;, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+}
+
+.App {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Estilos para PokemonList */
+.pokemon-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.pokemon-list li {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+}
+
+.pokemon-list li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Estilos para PokemonDetails */
+.pokemon-details {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+}
+
+.pokemon-details h2 {
+  margin-top: 0;
+}
+
+.pokemon-details img {
+  max-width: 200px;
+  height: auto;
+}
+
+.pokemon-details ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pokemon-details li {
+  margin-bottom: 8px;
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Bloque 6: Importamos los estilos y ejecutamos" duration="0">
+        <ul>
+<li>Importamos el archivo styles.css en el archivo index.js principal de nuestra aplicación.</li>
+<li>De esta manera, los estilos se aplicarán a toda la aplicación.</li>
+</ul>
+<pre><code language="language-jsx" class="language-jsx">import React from &#34;react&#34;;
+import ReactDOM from &#34;react-dom&#34;;
+import App from &#34;./App&#34;;
+import &#34;./styles.css&#34;;
+
+ReactDOM.render(
+  &lt;React.StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/React.StrictMode&gt;,
+  document.getElementById(&#34;root&#34;)
+);
+</code></pre>
+<h2 is-upgraded>Ejecutamos la aplicación</h2>
+<p>Ahora puedes ejecutar la aplicación con el siguiente comando:</p>
+<pre><code language="language-bash" class="language-bash">npm start
+</code></pre>
+<p>Esto iniciará el servidor de desarrollo y abrirá la aplicación en tu navegador predeterminado en <code>http://localhost:3000</code>. Podrás ver la lista de Pokémon y navegar a los detalles de cada uno de ellos.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

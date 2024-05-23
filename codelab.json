@@ -1,0 +1,17 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2024-05-23T08:02:46-05:00",
+  "id": "react-pokedex",
+  "duration": 15,
+  "title": "Codelab: Crea un mini Pokedex con React",
+  "summary": "Crea un mini Pokedex con React",
+  "source": "react-pokedex.md",
+  "theme": "",
+  "status": null,
+  "category": null,
+  "tags": [],
+  "url": "react-pokedex"
+}
